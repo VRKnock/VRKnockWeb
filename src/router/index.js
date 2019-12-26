@@ -25,8 +25,8 @@ const routes = [
   },
   {
     path: '/:host/:code',
-    name: 'knocker',
-    component: ()=>import(/* webpackChunkName: "knocker" */'../views/Knocker.vue')
+    name: 'qrconsumer',
+    component: ()=>import(/* webpackChunkName: "knocker" */'../views/QRConsumer.vue')
   }
 ]
 
