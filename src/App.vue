@@ -21,6 +21,11 @@
     @import '~vue-material/dist/vue-material.min.css';
     @import "~vue-material/dist/theme/default.css";
 
+    html,body,.md-app,.page-container{
+        height:100%;
+    }
+
+
     #app {
         /*font-family: 'Roboto', Helvetica, Arial, sans-serif;*/
         -webkit-font-smoothing: antialiased;
