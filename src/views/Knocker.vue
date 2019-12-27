@@ -83,11 +83,12 @@
                 this.canKnock = false;
 
                 this.statusText = reason;
+                this.updateActivity(null);
             },
             updateActivity(activity) {
                 if (!activity || activity.length === 0 || "null" === activity) {
                     this.gameActivity = "";
-                } else if ("idle" === activity) {
+                } else if ("idle" === activity||"Idle"===activity) {
                     this.gameActivity = "Currently Idle";
                 } else {
                     this.gameActivity = "Currently Playing " + activity;
@@ -138,6 +139,12 @@
                         }
                     })
                 };
+
+                this.socket.onclose = (err)=>{
+                    window.console.warn(err);
+                    this.onConnectionLost("Server Closed Connection")
+                }
+
                 this.socket.onerror = (err) => {
                     window.console.warn(err);
                     this.onConnectionLost("Socket Connection Error");
