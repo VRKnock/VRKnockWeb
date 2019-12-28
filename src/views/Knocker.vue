@@ -42,11 +42,14 @@
 </style>
 
 <script>
+    import {v4 as uuid} from "node-uuid";
+
     export default {
         name: "Knocker",
         data: () => ({
             host: '',
             code: '',
+            clientId: '',
             port: 16945,
             statusText: "",
             gameActivity: "",
@@ -226,6 +229,15 @@
             if (localStorage.code) {
                 this.code = localStorage.code;
             }
+            if (localStorage.clientId) {
+                this.clientId = localStorage.clientId;
+            }
+
+            if (!this.clientId) {
+                this.clientId = uuid() + "";
+                localStorage.clientId = this.clientId;
+            }
+            window.console.log("ClientId: "+this.clientId)
 
             this.reconnect();
         }
