@@ -42,18 +42,29 @@
 </style>
 
 <script>
+    import { v4 as uuid } from "node-uuid";
+
+    const CLOSED = 0;
+    const OPENING = 1;
+    const OPEN = 2;
+    const REGISTERING = 3;
+    const REGISTERED = 4;
+
     export default {
         name: "Knocker",
         data: () => ({
             host: '',
             code: '',
+            clientId: '',
             port: 16945,
+            connectionMethod: "DIRECT",
             statusText: "",
             gameActivity: "",
             canKnock: false,
             message: "Someone Wants Your Attention!",
             currentRequestResolve: null,
-            socket: null
+            socket: null,
+            socketState: CLOSED
         }),
         methods: {
             img(img) {
@@ -63,11 +74,12 @@
                 this.canKnock = false;
                 this.statusText = "Searching Host...";
 
-                if (!this.host || !this.code) {
+                if (!this.host || !this.code||"undefined"===this.host||"undefined"===this.code) {
                     this.$router.push("/settings");
                     return;
                 }
 
+                this.socketState = CLOSED;
                 this.testConnection();
             },
             onConnectionEstablished() {
@@ -88,11 +100,35 @@
             updateActivity(activity) {
                 if (!activity || activity.length === 0 || "null" === activity) {
                     this.gameActivity = "";
-                } else if ("idle" === activity||"Idle"===activity) {
+                } else if ("idle" === activity || "Idle" === activity) {
                     this.gameActivity = "Currently Idle";
                 } else {
                     this.gameActivity = "Currently Playing " + activity;
                 }
+            },
+            checkStatus() {
+                let body = {
+                    action: "status",
+                    code: this.code,
+                    version: "web"
+                };
+                this.sendRequest(body).then(json => {
+                    if (json) {
+                        let msg = json["msg"];
+                        let game = json["game"];
+
+                        this.$emit("snackbar", msg);
+                        this.updateActivity(game);
+
+                        if (json["status"] !== 0) {
+                            this.onConnectionLost();
+                        } else {
+                            this.onConnectionEstablished();
+                        }
+                    } else {
+                        this.onConnectionLost();
+                    }
+                })
             },
             testConnection() {
                 this.$emit("snackbar", "Connecting...");
@@ -101,7 +137,13 @@
                 //     path:"/",
                 //     transports: ['websocket']
                 // });
-                this.socket = new WebSocket("ws://" + this.host + ":" + this.port);
+                this.socketState = OPENING;
+                if (this.connectionMethod === "DIRECT") {
+                    //TODO: prevent direct connection when running on web
+                    this.socket = new WebSocket("ws://" + this.host + ":" + this.port);
+                } else if (this.connectionMethod === "BRIDGE") {
+                    this.socket = new WebSocket("wss://bridge.vrknock.app");
+                }
 
                 // // https://stackoverflow.com/questions/10405070/socket-io-client-respond-to-all-events-with-one-handler/33960032#33960032
                 // var onevent = socket.onevent;
@@ -115,39 +157,26 @@
 
                 this.socket.onopen = () => {
                     window.console.log("Socket connected");
+                    this.socketState = OPEN;
 
-                    let body = {
-                        action: "status",
-                        code: this.code,
-                        version: "web"
-                    };
-                    this.sendRequest(body).then(json => {
-                        if (json) {
-                            let msg = json["msg"];
-                            let game = json["game"];
-
-                            this.$emit("snackbar", msg);
-                            this.updateActivity(game);
-
-                            if (json["status"] !== 0) {
-                                this.onConnectionLost();
-                            } else {
-                                this.onConnectionEstablished();
-                            }
-                        } else {
-                            this.onConnectionLost();
-                        }
-                    })
+                    if (this.connectionMethod === "BRIDGE") {
+                        this.socketState = REGISTERING;
+                        this.socket.send(JSON.stringify({_type:"register",payload:{type:"client",clientId:this.clientId}}));
+                    }else {
+                        this.checkStatus();
+                    }
                 };
 
-                this.socket.onclose = (err)=>{
+                this.socket.onclose = (err) => {
                     window.console.warn(err);
-                    this.onConnectionLost("Server Closed Connection")
+                    this.onConnectionLost("Server Closed Connection");
+                    this.socketState = CLOSED;
                 }
 
                 this.socket.onerror = (err) => {
                     window.console.warn(err);
                     this.onConnectionLost("Socket Connection Error");
+                    this.socketState = CLOSED;
                 };
                 // socket.on("connect_timeout",()=>{
                 //     this.onConnectionLost("Socket Connection Timeout");
@@ -163,6 +192,15 @@
                     window.console.log(event.data);
                     let parsed = JSON.parse(event.data);
                     window.console.log(parsed);
+
+                    if (parsed.hasOwnProperty("_state")) {
+                        let state = parsed["_state"];
+                        window.console.log("State: " + state);
+                        if(this.connectionMethod==="BRIDGE"&&"REGISTERED"=== state){
+                            this.socketState = REGISTERED;
+                            this.checkStatus();
+                        }
+                    }
 
 
                     if (parsed && parsed.hasOwnProperty("evt") && parsed.evt === "status" && this.currentRequestResolve) {
@@ -215,6 +253,16 @@
                     }
                     this.currentRequestResolve = resolve;
 
+                    if (this.connectionMethod === "BRIDGE") {
+                        let payload = body;
+                        body = {
+                          _type:"forward",
+                          source:this.clientId,
+                          target: this.host,
+                          payload:payload
+                        };
+                    }
+
                     this.socket.send(JSON.stringify(body));
                 });
             }
@@ -226,6 +274,18 @@
             if (localStorage.code) {
                 this.code = localStorage.code;
             }
+            if (localStorage.clientId) {
+                this.clientId = localStorage.clientId;
+            }
+            if (localStorage.connectionMethod) {
+                this.connectionMethod = localStorage.connectionMethod;
+            }
+
+            if (!this.clientId) {
+                this.clientId = uuid() + "";
+                localStorage.clientId = this.clientId;
+            }
+            window.console.log("ClientId: " + this.clientId)
 
             this.reconnect();
         }
