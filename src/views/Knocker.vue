@@ -11,6 +11,16 @@
         </md-button>
 
         <br/>
+        <br/>
+
+       <div id="gplay-button">
+           <a href='https://play.google.com/store/apps/details?id=org.inventivetalent.vrknock&utm_source=VRKnockWeb&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
+           <br/>
+           <span id="gplay-attribution">Google Play and the Google Play logo are trademarks of Google LLC.</span>
+       </div>
+
+        <br/>
+        <br/>
 
         <md-field class="knock-message">
             <label for="message">Message</label>
