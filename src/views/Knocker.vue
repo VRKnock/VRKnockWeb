@@ -49,6 +49,11 @@
     .knock-message {
         float: bottom;
     }
+
+    #gplay-button img{
+        padding-left: 2em;
+        padding-right: 2em;
+    }
 </style>
 
 <script>
