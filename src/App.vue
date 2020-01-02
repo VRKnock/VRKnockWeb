@@ -5,11 +5,16 @@
                 <span class="md-title">VRKnock</span>
             </md-app-toolbar>
             <md-app-content>
-                <router-view @snackbar="showSnackbar"/>
+                <router-view @snackbar="showSnackbar" @alert="showAlert"/>
 
                 <md-snackbar md-position="center" :md-duration="2000" :md-active.sync="snackbarVisible" md-persistent>
                     <span>{{ snackbarMessage }}</span>
                 </md-snackbar>
+                <md-dialog-alert
+                        :md-active.sync="alertVisible"
+                        :md-title="alertTitle || 'Alert'"
+                        :md-content="alertMessage"
+                        :md-confirm-text="alertConfirmText || 'Okay!'" />
             </md-app-content>
         </md-app>
     </div>
@@ -66,12 +71,28 @@
     export default {
         data:()=>({
             snackbarVisible: false,
-            snackbarMessage: ''
+            snackbarMessage: '',
+            alertVisible: false,
+            alertTitle: '',
+            alertMessage: '',
+            alertConfirmText: 'Okay!'
         }),
         methods:{
             showSnackbar(msg){
                 this.snackbarMessage = msg;
                 this.snackbarVisible = true;
+            },
+            showAlert(msgOrOptions){
+                window.console.log("showAlert");
+                window.console.log(msgOrOptions)
+                if (typeof msgOrOptions === "string") {
+                    this.alertMessage=msgOrOptions;
+                }else{
+                    this.alertTitle=msgOrOptions.title||'Alert!';
+                    this.alertMessage=msgOrOptions.msg||msgOrOptions.message||"";
+                    this.alertConfirmText = msgOrOptions.confirm||"Okay!"
+                }
+                this.alertVisible = true;
             }
         }
     }

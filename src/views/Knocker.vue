@@ -13,11 +13,11 @@
         <br/>
         <br/>
 
-       <div id="gplay-button">
-           <a href='https://play.google.com/store/apps/details?id=org.inventivetalent.vrknock&utm_source=VRKnockWeb&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
-           <br/>
-           <span id="gplay-attribution">Google Play and the Google Play logo are trademarks of Google LLC.</span>
-       </div>
+        <div id="gplay-button">
+            <a href='https://play.google.com/store/apps/details?id=org.inventivetalent.vrknock&utm_source=VRKnockWeb&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
+            <br/>
+            <span id="gplay-attribution">Google Play and the Google Play logo are trademarks of Google LLC.</span>
+        </div>
 
         <br/>
         <br/>
@@ -84,7 +84,7 @@
                 this.canKnock = false;
                 this.statusText = "Searching Host...";
 
-                if (!this.host || !this.code||"undefined"===this.host||"undefined"===this.code) {
+                if (!this.host || !this.code || "undefined" === this.host || "undefined" === this.code) {
                     this.$router.push("/settings");
                     return;
                 }
@@ -171,8 +171,8 @@
 
                     if (this.connectionMethod === "BRIDGE") {
                         this.socketState = REGISTERING;
-                        this.socket.send(JSON.stringify({_type:"register",payload:{type:"client",clientId:this.clientId}}));
-                    }else {
+                        this.socket.send(JSON.stringify({_type: "register", payload: {type: "client", clientId: this.clientId}}));
+                    } else {
                         this.checkStatus();
                     }
                 };
@@ -206,7 +206,7 @@
                     if (parsed.hasOwnProperty("_state")) {
                         let state = parsed["_state"];
                         window.console.log("State: " + state);
-                        if(this.connectionMethod==="BRIDGE"&&"REGISTERED"=== state){
+                        if (this.connectionMethod === "BRIDGE" && "REGISTERED" === state) {
                             this.socketState = REGISTERED;
                             this.checkStatus();
                         }
@@ -266,10 +266,10 @@
                     if (this.connectionMethod === "BRIDGE") {
                         let payload = body;
                         body = {
-                          _type:"forward",
-                          source:this.clientId,
-                          target: this.host,
-                          payload:payload
+                            _type: "forward",
+                            source: this.clientId,
+                            target: this.host,
+                            payload: payload
                         };
                     }
 
@@ -291,13 +291,19 @@
                 this.connectionMethod = localStorage.connectionMethod;
             }
 
+
             if (!this.clientId) {
                 this.clientId = uuid() + "";
                 localStorage.clientId = this.clientId;
             }
             window.console.log("ClientId: " + this.clientId)
 
-            this.reconnect();
+            if (this.connectionMethod === "DIRECT") {
+                window.console.warn("DIRECT connection not supported in web app!");
+                this.$emit("alert", "DIRECT connection cannot be used in the web app!<br/>Please change to BRIDGE connection in the server application.");
+            } else {
+                this.reconnect();
+            }
         }
     }
 </script>
