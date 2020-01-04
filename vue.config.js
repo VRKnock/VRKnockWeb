@@ -1,20 +1,11 @@
+const webpack = require("webpack");
+
 module.exports = {
-    configureWebpack:{
-        // module: {
-        //     rules: [
-        //         // ... other rules omitted
-        //
-        //         // this will apply to both plain `.scss` files
-        //         // AND `<style lang="scss">` blocks in `.vue` files
-        //         {
-        //             test: /\.scss$/,
-        //             use: [
-        //                 'vue-style-loader',
-        //                 'css-loader',
-        //                 'sass-loader'
-        //             ]
-        //         }
-        //     ]
-        // },
+    chainWebpack: (config) => {
+        // https://github.com/vuejs/vue-cli/issues/1647#issuecomment-459650275
+        config.plugin('define').tap((definitions) => {
+            definitions[0]['process.env']['PACKAGE_VERSION'] = JSON.stringify(require('./package.json').version);
+            return definitions;
+        });
     }
 };

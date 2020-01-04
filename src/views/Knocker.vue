@@ -291,6 +291,8 @@
             }
         },
         mounted() {
+            window.console.log(process.env.PACKAGE_VERSION || "0.0.0");
+
             if (localStorage.host) {
                 this.host = localStorage.host;
             }
