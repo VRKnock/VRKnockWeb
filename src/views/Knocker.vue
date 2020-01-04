@@ -108,6 +108,7 @@
                 }
 
                 this.canKnock = false;
+                this.socketState = CLOSED;
 
                 this.statusText = reason;
                 this.updateActivity(null);
