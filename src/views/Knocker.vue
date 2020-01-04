@@ -212,9 +212,14 @@
                     if (parsed.hasOwnProperty("_state")) {
                         let state = parsed["_state"];
                         window.console.log("State: " + state);
-                        if (this.connectionMethod === "BRIDGE" && "REGISTERED" === state) {
-                            this.socketState = REGISTERED;
-                            this.checkStatus();
+                        if(this.connectionMethod === "BRIDGE") {
+                            if ("REGISTERED" === state) {
+                                this.socketState = REGISTERED;
+                                this.checkStatus();
+                            }
+                            if("DISCONNECT"=== state){
+                                this.onConnectionLost("Server Closed Connection");
+                            }
                         }
                     }
 
