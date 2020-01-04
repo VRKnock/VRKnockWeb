@@ -125,7 +125,8 @@
                 let body = {
                     action: "status",
                     code: this.code,
-                    version: "web"
+                    version: "web",
+                    platform: "web"
                 };
                 this.sendRequest(body).then(json => {
                     if (json) {
@@ -236,7 +237,8 @@
                     action: "triggerKnock",
                     code: this.code,
                     message: this.message,
-                    version: "web"
+                    version: "web",
+                    platform: "web"
                 };
                 this.sendRequest(body).then(json => {
                     window.console.log(json);
