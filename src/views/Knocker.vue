@@ -50,7 +50,7 @@
         float: bottom;
     }
 
-    #gplay-button img{
+    #gplay-button img {
         padding-left: 2em;
         padding-right: 2em;
     }
@@ -64,6 +64,10 @@
     const OPEN = 2;
     const REGISTERING = 3;
     const REGISTERED = 4;
+
+    const OUTDATED_CLIENT = -1;
+    const SAME = 0;
+    const OUTDATED_SERVER = 1;
 
     export default {
         name: "Knocker",
@@ -136,6 +140,8 @@
 
                         this.$emit("snackbar", msg);
                         this.updateActivity(game);
+
+                        this.checkVersion(json["version"]);
 
                         if (json["status"] !== 0) {
                             this.onConnectionLost();
@@ -213,12 +219,12 @@
                     if (parsed.hasOwnProperty("_state")) {
                         let state = parsed["_state"];
                         window.console.log("State: " + state);
-                        if(this.connectionMethod === "BRIDGE") {
+                        if (this.connectionMethod === "BRIDGE") {
                             if ("REGISTERED" === state) {
                                 this.socketState = REGISTERED;
                                 this.checkStatus();
                             }
-                            if("DISCONNECT"=== state){
+                            if ("DISCONNECT" === state) {
                                 this.onConnectionLost("Server Closed Connection");
                             }
                         }
@@ -256,6 +262,8 @@
                         this.$emit("snackbar", msg);
                         this.updateActivity(game);
 
+                        this.checkVersion(json["version"]);
+
                         if (json["status"] !== 0) {
                             this.onConnectionLost();
                         } else {
@@ -288,6 +296,42 @@
 
                     this.socket.send(JSON.stringify(body));
                 });
+            }
+        },
+        parseVersionString(str) {
+            let split = str.split("\\.");
+            let ints = [];
+            for (let i = 0; i < split.length; i++) {
+                ints[i] = parseInt(split[i]);
+            }
+            return ints;
+        },
+        compareVersions(client, server) {
+            window.console.log("Client Version: " + client + ", Server Version: " + server);
+            if (!client || !server || client.length === 0 || server.length === 0) return;
+            let c = this.parseVersionString(client);
+            let s = this.parseVersionString(server);
+            // Major
+            if (c[0] < s[0]) {
+                return OUTDATED_CLIENT;
+            } else if (s[0] < c[0]) {
+                return OUTDATED_SERVER;
+            } else {
+                // Minor
+                if (c[1] < s[1]) {
+                    return OUTDATED_CLIENT;
+                } else if (s[1] < c[1]) {
+                    return OUTDATED_SERVER;
+                }
+            }
+            return SAME;
+        },
+        checkVersion(serverVersion){
+            let v = this.compareVersions(process.env.PACKAGE_VERSION, serverVersion);
+            if (v === OUTDATED_SERVER) {
+                this.$emit("alert", "The Server Version is Outdated! Please Install the Latest Version.");
+            }else if (v === OUTDATED_CLIENT) {
+                this.$emit("alert", "The App Version is Outdated! Please Install an Older Server Version.")
             }
         },
         mounted() {
